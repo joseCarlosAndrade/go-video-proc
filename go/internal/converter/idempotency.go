@@ -43,9 +43,9 @@ func RegisterError(db *sql.DB, errorData map[string]any, err error) {
 
 	query := "INSERT INTO process_errors_log (error_details, created_at) VALUES ($1, $2)"
 
-	_, dbErr := db.Exec(query, serializedError)
+	_, dbErr := db.Exec(query, serializedError, time.Now())
 	if dbErr != nil {
-		slog.Error("error registering error", slog.String("error_details", string(serializedError)))
+		slog.Error("error registering error", slog.String("error", dbErr.Error()), slog.String("error_details", string(serializedError)))
 		return 
 	}
 	

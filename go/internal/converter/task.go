@@ -116,6 +116,7 @@ func (vc *VideoConverter) logError(task VideoTask, message string, err error) {
 
 	// todo: save error on database
 	RegisterError(vc.db, errorData, err)
+	
 }
 
 func (vc *VideoConverter) extractNumber(fileName string) int {
