@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -14,10 +15,13 @@ import (
 )
 
 type VideoConverter struct {
+	db *sql.DB
 }
 
-func NewVideoConverter()*VideoConverter {
-	return &VideoConverter{}
+func NewVideoConverter(db *sql.DB)*VideoConverter {
+	return &VideoConverter{
+		db : db,
+	}
 }
 
 // json that we'll receive
@@ -34,12 +38,22 @@ func (vc *VideoConverter) Handle(msg []byte) {
 		return
 	}
 
+	if IsProcessed(vc.db, task.VideoId) {
+		slog.Warn("video already processed", slog.Int("video_id", task.VideoId))
+		return
+	}
+
 	err := vc.processVideo(&task)
 	if err != nil {
 		vc.logError(task, "failed to process video", err)
 		return 
 	}
 	
+	if err := MarkProcessed(vc.db, task.VideoId); err != nil {
+		vc.logError(task, "failed to mark video as processed", err)
+	}
+
+	slog.Info("video marked as processed", slog.Int("video_id", task.VideoId))
 }
 
 func (vc *VideoConverter) processVideo(task *VideoTask) error {
@@ -101,6 +115,7 @@ func (vc *VideoConverter) logError(task VideoTask, message string, err error) {
 	slog.Error("processing error", slog.String("error_details", string(serializedError)))
 
 	// todo: save error on database
+	RegisterError(vc.db, errorData, err)
 }
 
 func (vc *VideoConverter) extractNumber(fileName string) int {
