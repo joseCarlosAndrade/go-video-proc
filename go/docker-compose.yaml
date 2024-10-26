@@ -1,0 +1,16 @@
+services:
+  go_ap_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - external-storage:/media/uploads
+    
+    tty: true # modo interativo ligado para poder logar no container
+    stdin_open: true # aceitar digitar coisas do bash
+
+  
+volumes:
+  external-storage:
+    external : true
